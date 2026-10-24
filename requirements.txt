@@ -1,0 +1,10 @@
+# PROJECT OMNISCIENCE — engine runtime (python 3.11)
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.27,<1.0
+httpx>=0.27,<1.0
+websockets>=12.0,<16.0
+numpy>=1.26,<3.0
+scikit-learn>=1.4,<2.0
+# optional: the intent classifier upgrades itself to xgboost when present
+# xgboost>=2.0
+pytest>=8.0

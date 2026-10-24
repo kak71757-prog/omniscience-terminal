@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OMNISCIENCE — Liquidity Terminal</title>
+<link rel="stylesheet" href="static/css/terminal.css" />
+</head>
+<body>
+<!-- ========================= ENGINE LINK GATE ========================= -->
+<div id="gate" class="gate hidden">
+  <div class="gate-card">
+    <div class="gate-logo">OMNI<span>SCIENCE</span></div>
+    <div class="gate-tag">LIQUIDITY IS THE ONLY GOD</div>
+    <div class="gate-h">LINK THIS TERMINAL TO A RUNNING ENGINE</div>
+    <p class="gate-p">
+      This deployment is the terminal shell. The market engine — websocket
+      ingestion, the three-model ensemble, the genetic evolution loop and the
+      paper broker — must run as a persistent process, because it holds open
+      streams and writes state continuously.
+    </p>
+    <div class="gate-row">
+      <input id="gate-url" spellcheck="false" placeholder="https://your-engine.example.com" />
+      <button id="gate-connect">CONNECT</button>
+    </div>
+    <div id="gate-status" class="gate-status">enter the base URL of your engine</div>
+    <div class="gate-cmd">
+      <div class="gate-cmd-h">START AN ENGINE ANYWHERE WITH DOCKER</div>
+      <code>docker run -p 8000:8000 -v omni:/app/data ghcr.io/you/omniscience</code>
+      <div class="gate-cmd-h" style="margin-top:8px">OR FROM SOURCE</div>
+      <code>pip install -r requirements.txt &amp;&amp; bash run.sh</code>
+    </div>
+    <div class="gate-foot">
+      The engine exposes <b>/api/health</b>, <b>/api/snapshot</b> and <b>/ws</b> with
+      permissive CORS, so any origin can link to it. Use HTTPS for the engine and
+      this page will upgrade the socket to <b>wss</b> automatically.
+    </div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+
+  <!-- ============================ TOP BAR ============================ -->
+  <header id="topbar">
+    <div class="brand">
+      <div class="logo">OMNI<span>SCIENCE</span></div>
+      <div class="tagline">LIQUIDITY IS THE ONLY GOD</div>
+    </div>
+
+    <div class="sym-block">
+      <select id="sym-select" title="Focus instrument"></select>
+      <div class="px">
+        <span id="price">--</span>
+        <span id="price-chg" class="chg">--</span>
+      </div>
+      <div class="spread" id="spread">SPREAD --</div>
+    </div>
+
+    <div class="score-block">
+      <div class="score-ring">
+        <svg viewBox="0 0 64 64">
+          <circle class="ring-bg" cx="32" cy="32" r="27"></circle>
+          <circle id="ring-fg" class="ring-fg" cx="32" cy="32" r="27"></circle>
+        </svg>
+        <div class="score-val"><span id="divine-score">0</span><i>DIVINE</i></div>
+      </div>
+      <div class="score-meta">
+        <div id="dir-badge" class="dir-badge">NO TRADE</div>
+        <div id="threshold-line" class="dim">THRESHOLD 85</div>
+      </div>
+    </div>
+
+    <div class="kz-block">
+      <div id="kz-state" class="kz-state">--</div>
+      <div id="kz-window" class="dim">--</div>
+      <div id="kz-count" class="kz-count">--</div>
+    </div>
+
+    <div class="status-block">
+      <div class="stat"><i id="dot-wire" class="dot"></i>WIRE</div>
+      <div class="stat"><i id="dot-ml" class="dot"></i>ML</div>
+      <div class="stat" id="latency">-- ms</div>
+      <div class="stat" id="clock">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- ========================= BLOCK BANNER ========================= -->
+  <div id="banner" class="banner hidden">
+    <div class="banner-flash"></div>
+    <div id="banner-text">NEWS BLACKOUT — VOLATILITY GOD IS ANGRY</div>
+    <div id="banner-sub"></div>
+  </div>
+
+  <!-- ============================ MAIN GRID ======================== -->
+  <main id="grid">
+
+    <!-- ---------------------------- LEFT 20% ---------------------------- -->
+    <aside id="left">
+      <section class="panel flex-scroll">
+        <h2>LIVE SCANNER <span id="scan-count" class="tag">0</span></h2>
+        <table id="scanner" class="tbl">
+          <thead><tr><th>SYM</th><th>DIR</th><th>DIVINE</th><th>ICT</th><th>LSTM</th><th>INT</th><th>Δ%</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="legend dim">Score &ge; threshold &rarr; tradeable. <span class="c-red">0</span> = shield veto.</div>
+      </section>
+
+      <section class="panel">
+        <h2>FUNDING HEATMAP</h2>
+        <div id="funding-heat" class="heat-list"></div>
+      </section>
+
+      <section class="panel">
+        <h2>ON-CHAIN &amp; SENTIMENT</h2>
+        <div class="kv"><span>Fear &amp; Greed</span><b id="fng">--</b></div>
+        <div class="meter"><div id="fng-bar"></div></div>
+        <div class="kv"><span>Stablecoin 24h net</span><b id="stbl-24">--</b></div>
+        <div class="kv"><span>Stablecoin 7d net</span><b id="stbl-7">--</b></div>
+        <div class="kv"><span>USDT+USDC dom</span><b id="dom">--</b></div>
+        <div class="kv"><span>USDT.D 1h Δ</span><b id="dom-chg">--</b></div>
+        <div class="kv"><span>Coinbase premium</span><b id="cb-prem">--</b></div>
+        <div class="kv"><span>Whale flow 1h</span><b id="whale">--</b></div>
+      </section>
+
+      <section class="panel flex-scroll">
+        <h2>NEWSWIRE</h2>
+        <div id="news-feed" class="feed"></div>
+      </section>
+
+      <section class="panel">
+        <h2>ECON CALENDAR <span id="cal-src" class="tag dim">--</span></h2>
+        <div id="calendar" class="feed small"></div>
+      </section>
+    </aside>
+
+    <!-- --------------------------- CENTER 60% --------------------------- -->
+    <section id="center">
+      <div id="mapbar">
+        <span class="mapbar-label">MAPS</span>
+        <button class="map-tog on" data-map="A">A · LIQUIDITY</button>
+        <button class="map-tog on" data-map="C">C · SMART MONEY</button>
+        <button class="map-tog" data-map="B">B · ORDER FLOW</button>
+        <button class="map-tog" data-map="D">D · VOLUME PROFILE</button>
+        <button class="map-tog on" data-map="F">F · LIQUIDATION</button>
+        <button class="map-tog on" data-map="G">G · AI PATH</button>
+        <span class="spacer"></span>
+        <span id="chart-meta" class="dim">--</span>
+      </div>
+
+      <div id="chart-wrap">
+        <div id="chart"></div>
+        <canvas id="overlay"></canvas>
+        <div id="chart-stamp" class="chart-stamp">BOOTSTRAPPING FEEDS…</div>
+      </div>
+
+      <div id="subcharts">
+        <div class="sub">
+          <div class="sub-h">ORDER FLOW · CVD / DELTA <span id="cvd-num" class="dim">--</span></div>
+          <canvas id="cvd-canvas"></canvas>
+        </div>
+        <div class="sub">
+          <div class="sub-h">FOOTPRINT · 1m BID x ASK <span id="fp-note" class="dim">--</span></div>
+          <canvas id="fp-canvas"></canvas>
+        </div>
+      </div>
+
+      <div id="strip-row">
+        <div class="strip-box">
+          <div class="sub-h">MAP E · CORRELATION MATRIX</div>
+          <table id="corr" class="tbl tiny"><tbody></tbody></table>
+        </div>
+        <div class="strip-box">
+          <div class="sub-h">MAP F · LIQUIDATION TRIGGERS</div>
+          <div id="liq-triggers" class="triggers"></div>
+        </div>
+        <div class="strip-box">
+          <div class="sub-h">ORDERBOOK DEPTH · 20L</div>
+          <canvas id="book-canvas"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------------------- RIGHT 20% --------------------------- -->
+    <aside id="right">
+      <section class="panel">
+        <h2>DIVINE SCORE ENGINE</h2>
+        <div class="model-row">
+          <span>ICT RULES <i class="dim">40%</i></span>
+          <div class="mbar"><div id="bar-ict"></div></div><b id="v-ict">0</b>
+        </div>
+        <div class="model-row">
+          <span>LSTM <i class="dim">30%</i></span>
+          <div class="mbar"><div id="bar-lstm"></div></div><b id="v-lstm">0</b>
+        </div>
+        <div class="model-row">
+          <span>INTENT <i class="dim">30%</i></span>
+          <div class="mbar"><div id="bar-intent"></div></div><b id="v-intent">0</b>
+        </div>
+        <div id="ensemble-note" class="note">--</div>
+      </section>
+
+      <section class="panel">
+        <h2>THE THREE SHIELDS</h2>
+        <div id="shield-1" class="shield">
+          <div class="sh-head"><i class="sh-dot"></i>KILLZONE</div>
+          <div class="sh-body">--</div>
+        </div>
+        <div id="shield-2" class="shield">
+          <div class="sh-head"><i class="sh-dot"></i>ANTI-MANIPULATION</div>
+          <div class="sh-body">--</div>
+        </div>
+        <div id="shield-3" class="shield">
+          <div class="sh-head"><i class="sh-dot"></i>NEWS BLACKOUT</div>
+          <div class="sh-body">--</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>RISK ENGINE</h2>
+        <div class="field"><label>CAPITAL $</label><input id="in-capital" type="number" step="100" min="50"></div>
+        <div class="field"><label>RISK %</label><input id="in-risk" type="number" step="0.1" min="0.1" max="5"></div>
+        <div class="field"><label>THRESHOLD</label><input id="in-threshold" type="number" step="1" min="50" max="99"></div>
+        <div class="field"><label>MODE</label>
+          <div class="seg"><button data-mode="PAPER" class="on">PAPER</button><button data-mode="PROP">PROP</button></div>
+        </div>
+        <div class="field"><label>AUTO-TRADE</label>
+          <div class="seg"><button data-auto="0" class="on">OFF</button><button data-auto="1">ON</button></div>
+        </div>
+        <div class="risk-out">
+          <div class="kv"><span>Pos size</span><b id="rk-qty">--</b></div>
+          <div class="kv"><span>Notional / Lev</span><b id="rk-notional">--</b></div>
+          <div class="kv"><span>Risk $</span><b id="rk-risk">--</b></div>
+          <div class="kv"><span>Entry / SL</span><b id="rk-levels">--</b></div>
+          <div class="kv"><span>TPS 1R / 2R / 4R</span><b id="rk-tps">--</b></div>
+        </div>
+        <div id="prop-box" class="prop"></div>
+      </section>
+
+      <section class="panel">
+        <h2>EXECUTION</h2>
+        <div class="exec-row">
+          <button id="btn-long" class="exec buy">LONG</button>
+          <button id="btn-short" class="exec sell">SHORT</button>
+        </div>
+        <div class="exec-row">
+          <button id="btn-close" class="exec flat">CLOSE ALL</button>
+          <button id="btn-evolve" class="exec evo">EVOLVE</button>
+        </div>
+        <div id="exec-note" class="note">--</div>
+      </section>
+
+      <section class="panel">
+        <h2>POSITIONS <span id="pos-count" class="tag">0</span></h2>
+        <div id="positions" class="feed small"></div>
+      </section>
+
+      <section class="panel">
+        <h2>PERFORMANCE</h2>
+        <div class="perf">
+          <div><i>PF</i><b id="pf">--</b></div>
+          <div><i>WIN%</i><b id="wr">--</b></div>
+          <div><i>NET $</i><b id="net">--</b></div>
+          <div><i>MAX DD</i><b id="dd">--</b></div>
+          <div><i>AVG R</i><b id="avgr">--</b></div>
+          <div><i>TRADES</i><b id="ntr">--</b></div>
+        </div>
+        <div class="equity-wrap"><canvas id="equity-canvas"></canvas></div>
+        <table id="history" class="tbl tiny">
+          <thead><tr><th>#</th><th>SYM</th><th>SIDE</th><th>R</th><th>$</th><th>WHY</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>WALK-FORWARD VALIDATION</h2>
+        <div class="perf">
+          <div><i>ENGINE PF</i><b id="vf-pf">--</b></div>
+          <div><i>ENGINE WR</i><b id="vf-wr">--</b></div>
+          <div><i>ENGINE R</i><b id="vf-r">--</b></div>
+          <div><i>BASE PF</i><b id="vf-bpf">--</b></div>
+          <div><i>BASE WR</i><b id="vf-bwr">--</b></div>
+          <div><i>SAMPLES</i><b id="vf-n">--</b></div>
+        </div>
+        <button id="btn-validate" class="exec flat" style="width:100%">RUN VALIDATION</button>
+        <div id="vf-note" class="note">Replays the live ICT engine bar-by-bar with no lookahead; baseline is RSI(14) trend-follow on the same bars.</div>
+      </section>
+
+      <section class="panel flex-scroll">
+        <h2>AI SELF-JOURNAL</h2>
+        <div id="journal" class="journal"></div>
+      </section>
+
+      <section class="panel">
+        <h2>SELF-EVOLUTION</h2>
+        <div class="kv"><span>Generation</span><b id="ev-gen">0</b></div>
+        <div class="kv"><span>GA fitness</span><b id="ev-fit">--</b></div>
+        <div class="kv"><span>Policy (UCB1)</span><b id="ev-pol">--</b></div>
+        <div class="kv"><span>Vol regime</span><b id="ev-vol">--</b></div>
+        <div id="ev-deltas" class="deltas"></div>
+        <div class="kv"><span>Models online</span><b id="ml-models">0</b></div>
+        <div class="kv"><span>LSTM val MSE</span><b id="ml-mse">--</b></div>
+        <div class="kv"><span>LSTM 15-bar acc</span><b id="ml-acc">--</b></div>
+        <div class="kv"><span>Intent AUC</span><b id="ml-auc">--</b></div>
+        <div class="kv"><span>Feed errors</span><b id="ml-err" class="c-red">0</b></div>
+      </section>
+    </aside>
+  </main>
+
+  <footer id="statusbar">
+    <span id="sb-left">OMNISCIENCE v1.0</span>
+    <span id="sb-mid"></span>
+    <span id="sb-right"></span>
+  </footer>
+</div>
+
+<!-- chart library: local vendored copy, CDN fallback when served statically -->
+<script src="vendor/lightweight-charts.js"></script>
+<script>
+  if (!window.LightweightCharts) {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"><\/script>');
+  }
+</script>
+<script src="config.js"></script>
+<script src="static/js/format.js"></script>
+<script src="static/js/chart.js"></script>
+<script src="static/js/panels.js"></script>
+<script src="static/js/app.js"></script>
+</body>
+</html>
