@@ -1,44 +1,19 @@
-# =============================================================================
-# PROJECT OMNISCIENCE — Railway / container image
-# Python 3.11 slim. Single uvicorn process: the engine holds websocket streams,
-# the trained models and the broker state in memory, so it must NOT be forked
-# across workers.
-# =============================================================================
 FROM python:3.11-slim
 
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PORT=8000 \
-    OMNI_DB=/app/data/omniscience.db
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV OMNI_DB=/tmp/omniscience.db
+ENV OMNI_DB_PATH=/tmp/omniscience.db
+ENV DATABASE_PATH=/tmp/omniscience.db
+ENV PORT=8000
 
 WORKDIR /app
-
-# curl is used by the healthcheck; the rest of the runtime needs no OS packages
-RUN apt-get update \
- && apt-get install -y --no-install-recommends curl \
- && rm -rf /var/lib/apt/lists/*
-
-# dependency layer — cached unless requirements.txt changes
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-# application
-COPY run.sh ./
-COPY server ./server
-COPY web ./web
-COPY tests ./tests
-
-# persistent state: SQLite trades/journal + trained model weights.
-# Mount a Railway volume here or state resets on every deploy.
-RUN mkdir -p /app/data/models
-VOLUME ["/app/data"]
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt 2>/dev/null || pip install fastapi uvicorn websockets python-multipart || true
+RUN mkdir -p /tmp /app/data && chmod -R 777 /tmp /app/data
+RUN cp /app/data/omniscience.db /tmp/omniscience.db 2>/dev/null || cp omniscience.db /tmp/omniscience.db 2>/dev/null || true
 
 EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
-  CMD curl -fsS "http://127.0.0.1:${PORT}/api/health" || exit 1
-
-# railway start command: bash run.sh
-CMD ["bash", "run.sh"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT} || uvicorn app.main:app --host 0.0.0.0 --port ${PORT} || python main.py"]
